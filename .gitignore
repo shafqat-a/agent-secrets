@@ -1,0 +1,8 @@
+# Rust build artifacts
+agent-keys/target/
+
+# Vendored dependencies (can be regenerated)
+agent-keys/vendor/
+
+# Local cargo config with absolute paths
+agent-keys/.cargo/

@@ -1,6 +1,6 @@
 # Agent Keys
 
-Agent Keys is a Rust command-line secrets manager for projects that need to keep API keys, passwords, certificates, service credentials, and small private files close to the code that uses them without exposing those secrets in Git. It stores secrets in an encrypted vault under `.agent-keys/`, and the encrypted files are designed to be safe to commit to a public or private repository.
+Agent Keys is a Rust command-line secrets manager for projects that need to keep API keys, passwords, certificates, service credentials, and small private files close to the code that uses them without exposing those secrets in Git. It stores secrets in an encrypted vault under `.agent-secrets/`, and the encrypted files are designed to be safe to commit to a public or private repository.
 
 The core idea is simple:
 
@@ -90,17 +90,17 @@ This lets you add several ways to unlock the same vault:
 - one CI/deploy SSH key;
 - short-lived locks for contractors or temporary machines.
 
-When someone leaves the team, remove their lock and commit the updated `.agent-keys/config.toml` and lock directory. For stronger protection after a possible lock compromise, rotate the master key.
+When someone leaves the team, remove their lock and commit the updated `.agent-secrets/config.toml` and lock directory. For stronger protection after a possible lock compromise, rotate the master key.
 
 ### What Is Safe To Commit
 
-The `.agent-keys/` directory is intended to be committed.
+The `.agent-secrets/` directory is intended to be committed.
 
 It contains:
 
-- `.agent-keys/config.toml`: public vault metadata and lock metadata;
-- `.agent-keys/vault.vlt`: encrypted vault content;
-- `.agent-keys/locks/*.enc`: encrypted master-key locks.
+- `.agent-secrets/config.toml`: public vault metadata and lock metadata;
+- `.agent-secrets/vault.vlt`: encrypted vault content;
+- `.agent-secrets/locks/*.enc`: encrypted master-key locks.
 
 These files should not contain plaintext secrets. If they do, treat it as a bug and do not commit them.
 
@@ -147,7 +147,7 @@ After initialization, a repository contains:
 
 ```text
 repo/
-├── .agent-keys/
+├── .agent-secrets/
 │   ├── config.toml
 │   ├── vault.vlt
 │   └── locks/
@@ -275,7 +275,7 @@ agent-secrets init --passphrase
 Commit the encrypted vault:
 
 ```bash
-git add .agent-keys/
+git add .agent-secrets/
 git commit -m "Add encrypted Agent Keys vault"
 ```
 
@@ -351,7 +351,7 @@ Force reinitialize an existing vault:
 agent-secrets init --ssh ~/.ssh/id_ed25519.pub --force
 ```
 
-Be careful with `--force`; it replaces the existing `.agent-keys/` directory.
+Be careful with `--force`; it replaces the existing `.agent-secrets/` directory.
 
 ### Unlock
 
@@ -368,8 +368,8 @@ agent-secrets unlock --read
 Unlock using an SSH private key stored in an environment variable:
 
 ```bash
-export AGENT_KEYS_SSH_KEY="$(cat ~/.ssh/id_ed25519)"
-agent-secrets unlock --ssh-key-from-env AGENT_KEYS_SSH_KEY
+export AGENT_SECRETS_SSH_KEY="$(cat ~/.ssh/id_ed25519)"
+agent-secrets unlock --ssh-key-from-env AGENT_SECRETS_SSH_KEY
 ```
 
 This is useful in CI and deployment automation.
@@ -624,7 +624,7 @@ This is convenient, but it writes plaintext to disk. Only do this in a secure te
 Recommended production pattern:
 
 - build images without secrets;
-- do not copy `.agent-keys/` into the image;
+- do not copy `.agent-secrets/` into the image;
 - inject secrets at runtime from the host, CI system, or orchestrator.
 
 Example Dockerfile:
@@ -681,7 +681,7 @@ rm -rf "$tmp_dir"
 
 You can install `agent-secrets` inside a container and decrypt at startup, but this is usually less desirable because the container then needs:
 
-- `.agent-keys/`;
+- `.agent-secrets/`;
 - a private SSH key or passphrase;
 - enough filesystem access to store a session.
 
@@ -689,11 +689,11 @@ If you do use this pattern, mount the private key as a runtime secret, not as pa
 
 ```bash
 docker run --rm \
-  -v "$PWD/.agent-keys:/app/.agent-keys:ro" \
-  -v "$HOME/.ssh/id_ed25519:/run/keys/agent_keys:ro" \
-  -e AGENT_KEYS_SSH_KEY="$(cat ~/.ssh/id_ed25519)" \
+  -v "$PWD/.agent-secrets:/app/.agent-secrets:ro" \
+  -v "$HOME/.ssh/id_ed25519:/run/keys/agent_secrets:ro" \
+  -e AGENT_SECRETS_SSH_KEY="$(cat ~/.ssh/id_ed25519)" \
   my-app-with-agent-secrets:latest \
-  sh -lc 'agent-secrets unlock --ssh-key-from-env AGENT_KEYS_SSH_KEY && agent-secrets run -- ./server'
+  sh -lc 'agent-secrets unlock --ssh-key-from-env AGENT_SECRETS_SSH_KEY && agent-secrets run -- ./server'
 ```
 
 For most teams, host-side unlock and runtime injection is cleaner.
@@ -773,7 +773,7 @@ Agent Keys can be used as the encrypted source of truth and then generate Kubern
 
 For GitOps or CI/CD:
 
-1. Commit `.agent-keys/` to the repository.
+1. Commit `.agent-secrets/` to the repository.
 2. Store the CI/deploy private key in the CI platform secret store.
 3. During deployment, unlock Agent Keys.
 4. Generate Kubernetes Secret objects or pipe values into `kubectl`.
@@ -784,8 +784,8 @@ For GitOps or CI/CD:
 Unlock:
 
 ```bash
-export AGENT_KEYS_SSH_KEY="$DEPLOY_PRIVATE_KEY"
-agent-secrets unlock --read --ssh-key-from-env AGENT_KEYS_SSH_KEY
+export AGENT_SECRETS_SSH_KEY="$DEPLOY_PRIVATE_KEY"
+agent-secrets unlock --read --ssh-key-from-env AGENT_SECRETS_SSH_KEY
 ```
 
 Create or update a Secret:
@@ -922,7 +922,7 @@ Most deployments should decrypt before applying manifests, not inside the cluste
 
 ### GitHub Actions
 
-Store the deploy private key in GitHub Actions secrets, for example `AGENT_KEYS_SSH_KEY`.
+Store the deploy private key in GitHub Actions secrets, for example `AGENT_SECRETS_SSH_KEY`.
 
 ```yaml
 name: Deploy
@@ -944,9 +944,9 @@ jobs:
 
       - name: Unlock vault
         env:
-          AGENT_KEYS_SSH_KEY: ${{ secrets.AGENT_KEYS_SSH_KEY }}
+          AGENT_SECRETS_SSH_KEY: ${{ secrets.AGENT_SECRETS_SSH_KEY }}
         run: |
-          agent-secrets unlock --read --ssh-key-from-env AGENT_KEYS_SSH_KEY
+          agent-secrets unlock --read --ssh-key-from-env AGENT_SECRETS_SSH_KEY
 
       - name: Export app env
         run: |
@@ -962,9 +962,9 @@ For Kubernetes:
 ```yaml
       - name: Apply Kubernetes secrets
         env:
-          AGENT_KEYS_SSH_KEY: ${{ secrets.AGENT_KEYS_SSH_KEY }}
+          AGENT_SECRETS_SSH_KEY: ${{ secrets.AGENT_SECRETS_SSH_KEY }}
         run: |
-          agent-secrets unlock --read --ssh-key-from-env AGENT_KEYS_SSH_KEY
+          agent-secrets unlock --read --ssh-key-from-env AGENT_SECRETS_SSH_KEY
           kubectl create secret generic my-app-secrets \
             --from-literal=DATABASE_URL="$(agent-secrets kv get DATABASE_URL --context prod --no-newline)" \
             --dry-run=client -o yaml \
@@ -989,7 +989,7 @@ Ask for their SSH public key:
 
 ```bash
 agent-secrets lock add-ssh ./alice.pub
-git add .agent-keys/
+git add .agent-secrets/
 git commit -m "Add Alice Agent Keys lock"
 git push
 ```
@@ -1001,7 +1001,7 @@ The teammate can pull and unlock with their matching private key.
 ```bash
 agent-secrets unlock
 agent-secrets lock add-passphrase
-git add .agent-keys/
+git add .agent-secrets/
 git commit -m "Add backup passphrase lock"
 ```
 
@@ -1013,7 +1013,7 @@ Store the passphrase in a secure password manager.
 agent-secrets unlock
 agent-secrets lock list
 agent-secrets lock remove ssh-deadbeef
-git add .agent-keys/
+git add .agent-secrets/
 git commit -m "Remove old Agent Keys lock"
 ```
 
@@ -1021,7 +1021,7 @@ If you believe the removed key had been compromised, rotate the master key:
 
 ```bash
 agent-secrets rotate
-git add .agent-keys/
+git add .agent-secrets/
 git commit -m "Rotate Agent Keys master key"
 ```
 
@@ -1058,7 +1058,7 @@ When a workflow needs a temporary file, put it in a secure temp directory, remov
 
 Docker images should not contain:
 
-- `.agent-keys/`;
+- `.agent-secrets/`;
 - private SSH keys;
 - generated env files;
 - generated Kubernetes Secret manifests.
@@ -1079,7 +1079,7 @@ Rotate when:
 
 ## Troubleshooting
 
-### `no .agent-keys directory found`
+### `no .agent-secrets directory found`
 
 Run the command from the repository root, or initialize first:
 
@@ -1098,7 +1098,7 @@ agent-secrets unlock
 or in CI:
 
 ```bash
-agent-secrets unlock --read --ssh-key-from-env AGENT_KEYS_SSH_KEY
+agent-secrets unlock --read --ssh-key-from-env AGENT_SECRETS_SSH_KEY
 ```
 
 ### `no SSH private keys found in ~/.ssh/`
@@ -1106,8 +1106,8 @@ agent-secrets unlock --read --ssh-key-from-env AGENT_KEYS_SSH_KEY
 Use a passphrase lock, place your private key in the default SSH location, or use env unlock:
 
 ```bash
-export AGENT_KEYS_SSH_KEY="$(cat ~/.ssh/id_ed25519)"
-agent-secrets unlock --ssh-key-from-env AGENT_KEYS_SSH_KEY
+export AGENT_SECRETS_SSH_KEY="$(cat ~/.ssh/id_ed25519)"
+agent-secrets unlock --ssh-key-from-env AGENT_SECRETS_SSH_KEY
 ```
 
 ### `wrong passphrase`

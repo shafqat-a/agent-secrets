@@ -11,16 +11,16 @@ use zeroize::Zeroize;
 
 pub fn run(ssh_paths: Vec<String>, passphrase: bool, force: bool) -> Result<()> {
     let cwd = std::env::current_dir()?;
-    let agent_keys_dir = cwd.join(".agent-keys");
+    let agent_secrets_dir = cwd.join(".agent-secrets");
 
-    if agent_keys_dir.exists() && !force {
-        anyhow::bail!(".agent-keys already exists. Use --force to overwrite.");
+    if agent_secrets_dir.exists() && !force {
+        anyhow::bail!(".agent-secrets already exists. Use --force to overwrite.");
     }
 
-    if agent_keys_dir.exists() {
-        std::fs::remove_dir_all(&agent_keys_dir)?;
+    if agent_secrets_dir.exists() {
+        std::fs::remove_dir_all(&agent_secrets_dir)?;
     }
-    std::fs::create_dir_all(agent_keys_dir.join("locks"))?;
+    std::fs::create_dir_all(agent_secrets_dir.join("locks"))?;
 
     // Generate master key
     let mut master_key = [0u8; 32];
@@ -69,7 +69,7 @@ pub fn run(ssh_paths: Vec<String>, passphrase: bool, force: bool) -> Result<()> 
         let id = format!("passphrase-{}", random_id());
         let lock = PassphraseLock::new(id.clone(), pass);
         let ciphertext = lock.encrypt_master_key(&master_key)?;
-        let lock_path = agent_keys_dir.join("locks").join(format!("{}.enc", id));
+        let lock_path = agent_secrets_dir.join("locks").join(format!("{}.enc", id));
         std::fs::write(&lock_path, ciphertext)?;
         config.locks.push(LockConfig {
             id: id.clone(),
@@ -87,7 +87,7 @@ pub fn run(ssh_paths: Vec<String>, passphrase: bool, force: bool) -> Result<()> 
     }
 
     // Save config
-    config.save(agent_keys_dir.join("config.toml"))?;
+    config.save(agent_secrets_dir.join("config.toml"))?;
 
     // Save empty vault (encrypted)
     use crate::vault::crypto::encrypt;
@@ -95,11 +95,11 @@ pub fn run(ssh_paths: Vec<String>, passphrase: bool, force: bool) -> Result<()> 
     let vault_bytes = vault.to_bytes()?;
     let blob = encrypt(&vault_bytes, &master_key)?;
     let vault_b64 = BASE64.encode(crate::vault::crypto::encode_vault_blob(&blob));
-    std::fs::write(agent_keys_dir.join("vault.vlt"), vault_b64)?;
+    std::fs::write(agent_secrets_dir.join("vault.vlt"), vault_b64)?;
     master_key.zeroize();
 
     println!(
-        "Initialized .agent-keys/ with {} lock(s).",
+        "Initialized .agent-secrets/ with {} lock(s).",
         config.locks.len()
     );
     Ok(())
@@ -165,8 +165,8 @@ fn add_ssh_lock(
     let lock = SshLock::new(id.clone(), pubkey.to_string());
     let ciphertext = lock.encrypt_master_key(master_key)?;
     let lock_filename = format!("{}.enc", id);
-    let agent_keys_dir = std::env::current_dir()?.join(".agent-keys");
-    let lock_path = agent_keys_dir.join("locks").join(&lock_filename);
+    let agent_secrets_dir = std::env::current_dir()?.join(".agent-secrets");
+    let lock_path = agent_secrets_dir.join("locks").join(&lock_filename);
     std::fs::write(&lock_path, ciphertext)
         .with_context(|| format!("failed to write lock file: {}", lock_path.display()))?;
     config.locks.push(LockConfig {

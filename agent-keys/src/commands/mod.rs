@@ -18,29 +18,29 @@ use anyhow::{Context, Result};
 use base64::{engine::general_purpose::STANDARD as BASE64, Engine};
 use std::path::{Path, PathBuf};
 
-pub fn find_agent_keys_dir() -> Result<PathBuf> {
+pub fn find_agent_secrets_dir() -> Result<PathBuf> {
     let current = std::env::current_dir()?;
-    let candidate = current.join(".agent-keys");
+    let candidate = current.join(".agent-secrets");
     if candidate.exists() {
         return Ok(candidate);
     }
     anyhow::bail!(
-        "no .agent-keys directory found in current directory. Run `agent-secrets init` first."
+        "no .agent-secrets directory found in current directory. Run `agent-secrets init` first."
     );
 }
 
-pub fn load_config(agent_keys_dir: &Path) -> Result<Config> {
-    let path = agent_keys_dir.join("config.toml");
+pub fn load_config(agent_secrets_dir: &Path) -> Result<Config> {
+    let path = agent_secrets_dir.join("config.toml");
     Config::load(path)
 }
 
-pub fn save_config(agent_keys_dir: &Path, config: &Config) -> Result<()> {
-    let path = agent_keys_dir.join("config.toml");
+pub fn save_config(agent_secrets_dir: &Path, config: &Config) -> Result<()> {
+    let path = agent_secrets_dir.join("config.toml");
     config.save(path)
 }
 
-pub fn load_vault(agent_keys_dir: &Path, config: &Config, session: &Session) -> Result<Vault> {
-    let vault_path = agent_keys_dir.join(&config.vault);
+pub fn load_vault(agent_secrets_dir: &Path, config: &Config, session: &Session) -> Result<Vault> {
+    let vault_path = agent_secrets_dir.join(&config.vault);
     let vault_content = std::fs::read_to_string(&vault_path)
         .with_context(|| format!("failed to read vault file: {}", vault_path.display()))?;
     let vault_bytes = BASE64
@@ -53,13 +53,13 @@ pub fn load_vault(agent_keys_dir: &Path, config: &Config, session: &Session) -> 
 }
 
 pub fn save_vault(
-    agent_keys_dir: &Path,
+    agent_secrets_dir: &Path,
     config: &Config,
     vault: &Vault,
     session: &Session,
 ) -> Result<()> {
     session.require_write()?;
-    let vault_path = agent_keys_dir.join(&config.vault);
+    let vault_path = agent_secrets_dir.join(&config.vault);
     let plaintext = vault.to_bytes()?;
     let blob = encrypt(&plaintext, &session.master_key)?;
     let vault_b64 = BASE64.encode(encode_vault_blob(&blob));

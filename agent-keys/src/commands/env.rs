@@ -6,9 +6,9 @@ pub fn run(context: Option<String>, format: String) -> Result<()> {
         Some(s) => s,
         None => anyhow::bail!("vault is locked. Run `agent-secrets unlock` first."),
     };
-    let agent_keys_dir = super::find_agent_keys_dir()?;
-    let config = super::load_config(&agent_keys_dir)?;
-    let vault = super::load_vault(&agent_keys_dir, &config, &session)?;
+    let agent_secrets_dir = super::find_agent_secrets_dir()?;
+    let config = super::load_config(&agent_secrets_dir)?;
+    let vault = super::load_vault(&agent_secrets_dir, &config, &session)?;
 
     let ctx_name = super::resolve_context(context)?;
     let ctx = vault

@@ -8,9 +8,9 @@ pub fn run(cmd: KvCommands) -> Result<()> {
         Some(s) => s,
         None => anyhow::bail!("vault is locked. Run `agent-secrets unlock` first."),
     };
-    let agent_keys_dir = super::find_agent_keys_dir()?;
-    let config = super::load_config(&agent_keys_dir)?;
-    let mut vault = super::load_vault(&agent_keys_dir, &config, &session)?;
+    let agent_secrets_dir = super::find_agent_secrets_dir()?;
+    let config = super::load_config(&agent_secrets_dir)?;
+    let mut vault = super::load_vault(&agent_secrets_dir, &config, &session)?;
 
     match cmd {
         KvCommands::Get {
@@ -52,7 +52,7 @@ pub fn run(cmd: KvCommands) -> Result<()> {
             let ctx_name = super::resolve_context(context)?;
             let ctx = vault.ensure_context(&ctx_name);
             ctx.set(key, value);
-            super::save_vault(&agent_keys_dir, &config, &vault, &session)?;
+            super::save_vault(&agent_secrets_dir, &config, &vault, &session)?;
             println!("Secret set.");
         }
         KvCommands::Remove { key, context } => {
@@ -62,7 +62,7 @@ pub fn run(cmd: KvCommands) -> Result<()> {
                 .get_context_mut(&ctx_name)
                 .ok_or_else(|| anyhow::anyhow!("context '{}' not found", ctx_name))?;
             if ctx.remove(&key).is_some() {
-                super::save_vault(&agent_keys_dir, &config, &vault, &session)?;
+                super::save_vault(&agent_secrets_dir, &config, &vault, &session)?;
                 println!("Secret removed.");
             } else {
                 anyhow::bail!("key '{}' not found in context '{}'", key, ctx_name);

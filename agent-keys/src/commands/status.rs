@@ -13,9 +13,9 @@ pub fn run() -> Result<()> {
                 }
             );
             // Try to count secrets
-            if let Ok(agent_keys_dir) = super::find_agent_keys_dir() {
-                if let Ok(config) = super::load_config(&agent_keys_dir) {
-                    if let Ok(vault) = super::load_vault(&agent_keys_dir, &config, &session) {
+            if let Ok(agent_secrets_dir) = super::find_agent_secrets_dir() {
+                if let Ok(config) = super::load_config(&agent_secrets_dir) {
+                    if let Ok(vault) = super::load_vault(&agent_secrets_dir, &config, &session) {
                         let ctx_count = vault.contexts.len();
                         let total_kv: usize = vault.contexts.values().map(|c| c.kv.len()).sum();
                         let total_files: usize =
@@ -25,15 +25,15 @@ pub fn run() -> Result<()> {
                         println!("Total files: {}", total_files);
                     }
                 }
-                if let Ok(config) = super::load_config(&agent_keys_dir) {
+                if let Ok(config) = super::load_config(&agent_secrets_dir) {
                     println!("Locks: {}", config.locks.len());
                 }
             }
         }
         None => {
             println!("Status: locked");
-            if let Ok(agent_keys_dir) = super::find_agent_keys_dir() {
-                if let Ok(config) = super::load_config(&agent_keys_dir) {
+            if let Ok(agent_secrets_dir) = super::find_agent_secrets_dir() {
+                if let Ok(config) = super::load_config(&agent_secrets_dir) {
                     println!("Locks: {}", config.locks.len());
                 }
             }

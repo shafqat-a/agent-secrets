@@ -17,9 +17,9 @@ pub fn run(cmd: LockCommands) -> Result<()> {
 
 fn add_ssh(pubkey_path: String) -> Result<()> {
     let session = require_unlocked_session()?;
-    let agent_keys_dir = super::find_agent_keys_dir()?;
-    let mut config = super::load_config(&agent_keys_dir)?;
-    super::load_vault(&agent_keys_dir, &config, &session)?;
+    let agent_secrets_dir = super::find_agent_secrets_dir()?;
+    let mut config = super::load_config(&agent_secrets_dir)?;
+    super::load_vault(&agent_secrets_dir, &config, &session)?;
 
     let pubkey = std::fs::read_to_string(&pubkey_path)
         .with_context(|| format!("failed to read pubkey: {}", pubkey_path))?;
@@ -39,7 +39,7 @@ fn add_ssh(pubkey_path: String) -> Result<()> {
     let lock = SshLock::new(id.clone(), pubkey.trim().to_string());
     let ciphertext = lock.encrypt_master_key(&session.master_key)?;
     let lock_filename = format!("{}.enc", id);
-    let lock_path = agent_keys_dir.join("locks").join(&lock_filename);
+    let lock_path = agent_secrets_dir.join("locks").join(&lock_filename);
     std::fs::write(&lock_path, ciphertext)?;
 
     config.locks.push(LockConfig {
@@ -51,15 +51,15 @@ fn add_ssh(pubkey_path: String) -> Result<()> {
         public_key: Some(pubkey.trim().to_string()),
         created_at: Utc::now().to_rfc3339(),
     });
-    super::save_config(&agent_keys_dir, &config)?;
+    super::save_config(&agent_secrets_dir, &config)?;
     println!("SSH lock added.");
     Ok(())
 }
 
 fn add_passphrase() -> Result<()> {
     let session = require_unlocked_session()?;
-    let agent_keys_dir = super::find_agent_keys_dir()?;
-    let mut config = super::load_config(&agent_keys_dir)?;
+    let agent_secrets_dir = super::find_agent_secrets_dir()?;
+    let mut config = super::load_config(&agent_secrets_dir)?;
 
     let pass = rpassword::prompt_password("Enter a strong passphrase: ")?;
     let confirm = rpassword::prompt_password("Confirm passphrase: ")?;
@@ -70,7 +70,7 @@ fn add_passphrase() -> Result<()> {
     let id = format!("passphrase-{}", random_id());
     let lock = PassphraseLock::new(id.clone(), pass);
     let ciphertext = lock.encrypt_master_key(&session.master_key)?;
-    let lock_path = agent_keys_dir.join("locks").join(format!("{}.enc", id));
+    let lock_path = agent_secrets_dir.join("locks").join(format!("{}.enc", id));
     std::fs::write(&lock_path, ciphertext)?;
 
     config.locks.push(LockConfig {
@@ -82,14 +82,14 @@ fn add_passphrase() -> Result<()> {
         public_key: None,
         created_at: Utc::now().to_rfc3339(),
     });
-    super::save_config(&agent_keys_dir, &config)?;
+    super::save_config(&agent_secrets_dir, &config)?;
     println!("Passphrase lock added.");
     Ok(())
 }
 
 fn list_locks() -> Result<()> {
-    let agent_keys_dir = super::find_agent_keys_dir()?;
-    let config = super::load_config(&agent_keys_dir)?;
+    let agent_secrets_dir = super::find_agent_secrets_dir()?;
+    let config = super::load_config(&agent_secrets_dir)?;
     for lock in &config.locks {
         println!("{} ({})", lock.id, lock.lock_type);
         if let Some(fp) = &lock.fingerprint {
@@ -104,8 +104,8 @@ fn list_locks() -> Result<()> {
 
 fn remove_lock(id: String) -> Result<()> {
     let _session = require_unlocked_session()?;
-    let agent_keys_dir = super::find_agent_keys_dir()?;
-    let mut config = super::load_config(&agent_keys_dir)?;
+    let agent_secrets_dir = super::find_agent_secrets_dir()?;
+    let mut config = super::load_config(&agent_secrets_dir)?;
 
     if config.locks.len() <= 1 {
         anyhow::bail!("cannot remove the last lock. Add another lock first to avoid lockout.");
@@ -114,12 +114,12 @@ fn remove_lock(id: String) -> Result<()> {
     let lock = config
         .find_lock(&id)
         .ok_or_else(|| anyhow::anyhow!("lock '{}' not found", id))?;
-    let lock_path = agent_keys_dir.join(&lock.file);
+    let lock_path = agent_secrets_dir.join(&lock.file);
     if lock_path.exists() {
         std::fs::remove_file(lock_path)?;
     }
     config.remove_lock(&id);
-    super::save_config(&agent_keys_dir, &config)?;
+    super::save_config(&agent_secrets_dir, &config)?;
     println!("Lock '{}' removed.", id);
     Ok(())
 }

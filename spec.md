@@ -64,7 +64,7 @@
 ### Repository Structure
 ```
 repo/
-├── .agent-keys/
+├── .agent-secrets/
 │   ├── config.toml              # Public metadata
 │   ├── vault.vlt                # Base64-encoded encrypted vault
 │   └── locks/
@@ -72,7 +72,7 @@ repo/
 │       └── passphrase-xyz.enc   # Master key encrypted to passphrase
 ```
 
-All files in `.agent-keys/` are safe to commit to a public repository.
+All files in `.agent-secrets/` are safe to commit to a public repository.
 
 ### `config.toml` (Public)
 ```toml
@@ -221,7 +221,7 @@ Initialize a new vault in the current repository.
 - Prompts user to select which key(s) to use
 - Prompts for an optional passphrase lock
 - Generates a random 32-byte master key
-- Creates `.agent-keys/` directory with config, vault, and initial lock file(s)
+- Creates `.agent-secrets/` directory with config, vault, and initial lock file(s)
 - Vault starts with a single empty `default` context
 
 **Options:**
@@ -411,9 +411,9 @@ For GitHub Actions and other CI environments:
 ```yaml
 - name: Unlock secrets
   env:
-    AGENT_KEYS_SSH_KEY: ${{ secrets.DEPLOY_KEY }}
+    AGENT_SECRETS_SSH_KEY: ${{ secrets.DEPLOY_KEY }}
   run: |
-    agent-secrets unlock --ssh-key-from-env AGENT_KEYS_SSH_KEY
+    agent-secrets unlock --ssh-key-from-env AGENT_SECRETS_SSH_KEY
     agent-secrets env --format github >> "$GITHUB_ENV"
 ```
 

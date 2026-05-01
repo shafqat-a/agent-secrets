@@ -7,9 +7,9 @@ pub fn run(cmd: FileCommands) -> Result<()> {
         Some(s) => s,
         None => anyhow::bail!("vault is locked. Run `agent-secrets unlock` first."),
     };
-    let agent_keys_dir = super::find_agent_keys_dir()?;
-    let config = super::load_config(&agent_keys_dir)?;
-    let mut vault = super::load_vault(&agent_keys_dir, &config, &session)?;
+    let agent_secrets_dir = super::find_agent_secrets_dir()?;
+    let config = super::load_config(&agent_secrets_dir)?;
+    let mut vault = super::load_vault(&agent_secrets_dir, &config, &session)?;
 
     match cmd {
         FileCommands::Read {
@@ -47,7 +47,7 @@ pub fn run(cmd: FileCommands) -> Result<()> {
             let ctx_name = super::resolve_context(context)?;
             let ctx = vault.ensure_context(&ctx_name);
             ctx.set_file(vault_path, data);
-            super::save_vault(&agent_keys_dir, &config, &vault, &session)?;
+            super::save_vault(&agent_secrets_dir, &config, &vault, &session)?;
             println!("File stored in vault.");
         }
         FileCommands::Remove {
@@ -60,7 +60,7 @@ pub fn run(cmd: FileCommands) -> Result<()> {
                 .get_context_mut(&ctx_name)
                 .ok_or_else(|| anyhow::anyhow!("context '{}' not found", ctx_name))?;
             if ctx.remove_file(&vault_path).is_some() {
-                super::save_vault(&agent_keys_dir, &config, &vault, &session)?;
+                super::save_vault(&agent_secrets_dir, &config, &vault, &session)?;
                 println!("File removed.");
             } else {
                 anyhow::bail!("file '{}' not found in context '{}'", vault_path, ctx_name);

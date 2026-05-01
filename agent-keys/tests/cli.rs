@@ -54,8 +54,8 @@ fn init_and_unlock(repo: &Path, home: &Path) -> std::io::Result<()> {
     );
     assert_success(
         command(repo, home)
-            .args(["unlock", "--ssh-key-from-env", "AGENT_KEYS_TEST_KEY"])
-            .env("AGENT_KEYS_TEST_KEY", private_key)
+            .args(["unlock", "--ssh-key-from-env", "AGENT_SECRETS_TEST_KEY"])
+            .env("AGENT_SECRETS_TEST_KEY", private_key)
             .output()?,
     );
     Ok(())
@@ -129,7 +129,7 @@ fn ssh_env_unlock_and_kv_roundtrip() -> std::io::Result<()> {
     fs::create_dir_all(&home)?;
 
     init_and_unlock(&repo, &home)?;
-    if !repo.join(".agent-keys").exists() {
+    if !repo.join(".agent-secrets").exists() {
         return Ok(());
     }
 
@@ -180,7 +180,7 @@ fn ssh_encrypted_key_unlock_and_kv_roundtrip() -> std::io::Result<()> {
     let output = script_command(&repo, &home, &["unlock"], "testpass\n")?;
     assert_success(output);
 
-    if !repo.join(".agent-keys").exists() {
+    if !repo.join(".agent-secrets").exists() {
         return Ok(());
     }
 
@@ -231,7 +231,7 @@ fn ssh_env_encrypted_key_unlock() -> std::io::Result<()> {
     let output = script_command(
         &repo,
         &home,
-        &["unlock", "--ssh-key-from-env", "AGENT_KEYS_TEST_KEY"],
+        &["unlock", "--ssh-key-from-env", "AGENT_SECRETS_TEST_KEY"],
         "envpass\n",
     )?;
     assert!(
@@ -255,7 +255,7 @@ fn file_write_and_read_roundtrip() -> std::io::Result<()> {
     fs::create_dir_all(&home)?;
 
     init_and_unlock(&repo, &home)?;
-    if !repo.join(".agent-keys").exists() {
+    if !repo.join(".agent-secrets").exists() {
         return Ok(());
     }
 
@@ -289,7 +289,7 @@ fn env_export_formats() -> std::io::Result<()> {
     fs::create_dir_all(&home)?;
 
     init_and_unlock(&repo, &home)?;
-    if !repo.join(".agent-keys").exists() {
+    if !repo.join(".agent-secrets").exists() {
         return Ok(());
     }
 
@@ -336,7 +336,7 @@ fn run_injects_env_vars() -> std::io::Result<()> {
     fs::create_dir_all(&home)?;
 
     init_and_unlock(&repo, &home)?;
-    if !repo.join(".agent-keys").exists() {
+    if !repo.join(".agent-secrets").exists() {
         return Ok(());
     }
 
@@ -365,7 +365,7 @@ fn context_scoped_kv() -> std::io::Result<()> {
     fs::create_dir_all(&home)?;
 
     init_and_unlock(&repo, &home)?;
-    if !repo.join(".agent-keys").exists() {
+    if !repo.join(".agent-secrets").exists() {
         return Ok(());
     }
 
@@ -429,7 +429,7 @@ fn read_only_rejects_writes() -> std::io::Result<()> {
     fs::create_dir_all(&home)?;
 
     init_and_unlock(&repo, &home)?;
-    if !repo.join(".agent-keys").exists() {
+    if !repo.join(".agent-secrets").exists() {
         return Ok(());
     }
 
@@ -441,10 +441,10 @@ fn read_only_rejects_writes() -> std::io::Result<()> {
                 "unlock",
                 "--read",
                 "--ssh-key-from-env",
-                "AGENT_KEYS_TEST_KEY",
+                "AGENT_SECRETS_TEST_KEY",
             ])
             .env(
-                "AGENT_KEYS_TEST_KEY",
+                "AGENT_SECRETS_TEST_KEY",
                 fs::read_to_string(home.join(".ssh/id_ed25519"))?,
             )
             .output()?,
@@ -480,7 +480,7 @@ fn lock_add_passphrase_and_remove_ssh() -> std::io::Result<()> {
     fs::create_dir_all(&home)?;
 
     init_and_unlock(&repo, &home)?;
-    if !repo.join(".agent-keys").exists() {
+    if !repo.join(".agent-secrets").exists() {
         return Ok(());
     }
 
@@ -536,7 +536,7 @@ fn rotate_rekeys_vault() -> std::io::Result<()> {
     fs::create_dir_all(&home)?;
 
     init_and_unlock(&repo, &home)?;
-    if !repo.join(".agent-keys").exists() {
+    if !repo.join(".agent-secrets").exists() {
         return Ok(());
     }
 
@@ -552,9 +552,9 @@ fn rotate_rekeys_vault() -> std::io::Result<()> {
     // Re-unlock and verify data survived
     assert_success(
         command(&repo, &home)
-            .args(["unlock", "--ssh-key-from-env", "AGENT_KEYS_TEST_KEY"])
+            .args(["unlock", "--ssh-key-from-env", "AGENT_SECRETS_TEST_KEY"])
             .env(
-                "AGENT_KEYS_TEST_KEY",
+                "AGENT_SECRETS_TEST_KEY",
                 fs::read_to_string(home.join(".ssh/id_ed25519"))?,
             )
             .output()?,

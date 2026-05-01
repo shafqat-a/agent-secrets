@@ -11,9 +11,9 @@ pub fn run() -> Result<()> {
     };
     session.require_write()?;
 
-    let agent_keys_dir = super::find_agent_keys_dir()?;
-    let config = super::load_config(&agent_keys_dir)?;
-    let vault = super::load_vault(&agent_keys_dir, &config, &session)?;
+    let agent_secrets_dir = super::find_agent_secrets_dir()?;
+    let config = super::load_config(&agent_secrets_dir)?;
+    let vault = super::load_vault(&agent_secrets_dir, &config, &session)?;
 
     // Generate new master key
     let mut new_master_key = [0u8; 32];
@@ -21,7 +21,7 @@ pub fn run() -> Result<()> {
 
     // Re-encrypt all lock files before replacing the vault key.
     for lock_config in &config.locks {
-        let lock_path = agent_keys_dir.join(&lock_config.file);
+        let lock_path = agent_secrets_dir.join(&lock_config.file);
         match lock_config.lock_type.as_str() {
             "ssh" => {
                 let pubkey = lock_config.public_key.as_ref().ok_or_else(|| {
@@ -46,7 +46,7 @@ pub fn run() -> Result<()> {
     }
 
     let new_session = Session::new(new_master_key, SessionMode::Write);
-    super::save_vault(&agent_keys_dir, &config, &vault, &new_session)?;
+    super::save_vault(&agent_secrets_dir, &config, &vault, &new_session)?;
     new_session.save()?;
 
     println!("Master key rotated.");

@@ -9,8 +9,8 @@ use std::path::Path;
 use zeroize::Zeroize;
 
 pub fn run(read_only: bool, ssh_key_from_env: Option<String>) -> Result<()> {
-    let agent_keys_dir = super::find_agent_keys_dir()?;
-    let config = super::load_config(&agent_keys_dir)?;
+    let agent_secrets_dir = super::find_agent_secrets_dir()?;
+    let config = super::load_config(&agent_secrets_dir)?;
 
     // Try loading existing session first
     if let Some(session) = Session::load()? {
@@ -21,7 +21,7 @@ pub fn run(read_only: bool, ssh_key_from_env: Option<String>) -> Result<()> {
         return Ok(());
     }
 
-    let master_key = try_unlock(&agent_keys_dir, &config, ssh_key_from_env.as_deref())?;
+    let master_key = try_unlock(&agent_secrets_dir, &config, ssh_key_from_env.as_deref())?;
 
     let mode = if read_only {
         SessionMode::Read
@@ -36,7 +36,7 @@ pub fn run(read_only: bool, ssh_key_from_env: Option<String>) -> Result<()> {
 }
 
 fn try_unlock(
-    agent_keys_dir: &Path,
+    agent_secrets_dir: &Path,
     config: &Config,
     ssh_key_from_env: Option<&str>,
 ) -> Result<[u8; 32]> {
@@ -44,7 +44,7 @@ fn try_unlock(
         let mut key = std::env::var(env_name)
             .with_context(|| format!("environment variable '{}' is not set", env_name))?;
         for lock in config.locks.iter().filter(|lock| lock.lock_type == "ssh") {
-            if let Ok(master_key) = unlock_ssh_with_identity(agent_keys_dir, lock, &key, env_name) {
+            if let Ok(master_key) = unlock_ssh_with_identity(agent_secrets_dir, lock, &key, env_name) {
                 key.zeroize();
                 return Ok(master_key);
             }
@@ -56,7 +56,7 @@ fn try_unlock(
     // If only one lock, try it directly
     if config.locks.len() == 1 {
         let lock = &config.locks[0];
-        return unlock_with_lock(agent_keys_dir, lock);
+        return unlock_with_lock(agent_secrets_dir, lock);
     }
 
     // Multiple locks: prompt user
@@ -74,11 +74,11 @@ fn try_unlock(
     }
     let idx: usize = choice.parse().context("invalid choice")?;
     let lock = config.locks.get(idx - 1).context("invalid choice")?;
-    unlock_with_lock(agent_keys_dir, lock)
+    unlock_with_lock(agent_secrets_dir, lock)
 }
 
-fn unlock_with_lock(agent_keys_dir: &Path, lock: &crate::config::LockConfig) -> Result<[u8; 32]> {
-    let lock_path = agent_keys_dir.join(&lock.file);
+fn unlock_with_lock(agent_secrets_dir: &Path, lock: &crate::config::LockConfig) -> Result<[u8; 32]> {
+    let lock_path = agent_secrets_dir.join(&lock.file);
     let ciphertext = std::fs::read(&lock_path)
         .with_context(|| format!("failed to read lock file: {}", lock_path.display()))?;
 
@@ -94,12 +94,12 @@ fn unlock_with_lock(agent_keys_dir: &Path, lock: &crate::config::LockConfig) -> 
 }
 
 fn unlock_ssh_with_identity(
-    agent_keys_dir: &Path,
+    agent_secrets_dir: &Path,
     lock: &crate::config::LockConfig,
     private_key: &str,
     env_name: &str,
 ) -> Result<[u8; 32]> {
-    let lock_path = agent_keys_dir.join(&lock.file);
+    let lock_path = agent_secrets_dir.join(&lock.file);
     let ciphertext = std::fs::read(&lock_path)
         .with_context(|| format!("failed to read lock file: {}", lock_path.display()))?;
     let identity = age::ssh::Identity::from_buffer(

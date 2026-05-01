@@ -1,4 +1,4 @@
-# Agent Keys
+# Agent Secrets
 
 Agent Keys is a Rust command-line secrets manager for projects that need to keep API keys, passwords, certificates, service credentials, and small private files close to the code that uses them without exposing those secrets in Git. It stores secrets in an encrypted vault under `.agent-secrets/`, and the encrypted files are designed to be safe to commit to a public or private repository.
 

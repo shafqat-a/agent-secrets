@@ -86,7 +86,7 @@ impl Session {
 
     pub fn require_write(&self) -> Result<()> {
         if self.mode != SessionMode::Write {
-            anyhow::bail!("vault is in read-only mode. Run `agent-keys unlock` without --read to enable writes.");
+            anyhow::bail!("vault is in read-only mode. Run `agent-secrets unlock` without --read to enable writes.");
         }
         Ok(())
     }
@@ -100,6 +100,6 @@ impl Drop for Session {
 
 fn session_path() -> Result<PathBuf> {
     let dirs =
-        ProjectDirs::from("", "", "agent-keys").context("could not determine cache directory")?;
+        ProjectDirs::from("", "", "agent-secrets").context("could not determine cache directory")?;
     Ok(dirs.cache_dir().join("session"))
 }

@@ -17,7 +17,7 @@ Agent Keys is especially useful for local development, Docker-based application 
 
 ## Table of Contents
 
-1. [Why Agent Keys Exists](#why-agent-keys-exists)
+1. [Why Agent Keys Exists](#why-agent-secrets-exists)
 2. [Security Model](#security-model)
 3. [Repository Layout](#repository-layout)
 4. [Installation](#installation)
@@ -122,7 +122,7 @@ After unlock, Agent Keys writes an encrypted session file to the platform cache 
 Use:
 
 ```bash
-agent-keys close
+agent-secrets close
 ```
 
 to delete the session file and lock the vault again.
@@ -132,7 +132,7 @@ to delete the session file and lock the vault again.
 Unlock with:
 
 ```bash
-agent-keys unlock --read
+agent-secrets unlock --read
 ```
 
 to create a read-only session. Read-only mode allows commands such as `kv get`, `file read`, `env`, and `run`, but rejects writes like `kv set`, `file write`, lock changes, and rotation.
@@ -159,7 +159,7 @@ repo/
 The Rust crate currently lives in:
 
 ```text
-agent-keys/
+agent-secrets/
 ├── Cargo.toml
 ├── Cargo.lock
 ├── src/
@@ -174,19 +174,19 @@ The top-level `spec.md` contains the product specification.
 
 ### Prebuilt Binaries
 
-Download a prebuilt binary from the [GitHub Releases](https://github.com/yourusername/agent-keys/releases) page.
+Download a prebuilt binary from the [GitHub Releases](https://github.com/yourusername/agent-secrets/releases) page.
 
 Linux / macOS:
 
 ```bash
-tar xzf agent-keys-x86_64-unknown-linux-gnu.tar.gz
-install -m 0755 agent-keys ~/.local/bin/agent-keys
+tar xzf agent-secrets-x86_64-unknown-linux-gnu.tar.gz
+install -m 0755 agent-secrets ~/.local/bin/agent-secrets
 ```
 
 Windows (PowerShell):
 
 ```powershell
-Expand-Archive agent-keys-x86_64-pc-windows-msvc.zip -DestinationPath .\agent-keys
+Expand-Archive agent-secrets-x86_64-pc-windows-msvc.zip -DestinationPath .\agent-secrets
 ```
 
 ### Build From Source
@@ -194,32 +194,32 @@ Expand-Archive agent-keys-x86_64-pc-windows-msvc.zip -DestinationPath .\agent-ke
 If you have the Rust toolchain installed:
 
 ```bash
-cargo install --path agent-keys
+cargo install --path agent-secrets
 ```
 
 Or clone and build manually:
 
 ```bash
-cd agent-keys
+cd agent-secrets
 cargo build --release
 ```
 
 The binary is written to:
 
 ```bash
-target/release/agent-keys
+target/release/agent-secrets
 ```
 
 Install it somewhere on your `PATH`:
 
 ```bash
-install -m 0755 target/release/agent-keys ~/.local/bin/agent-keys
+install -m 0755 target/release/agent-secrets ~/.local/bin/agent-secrets
 ```
 
 or run it directly:
 
 ```bash
-./target/release/agent-keys --help
+./target/release/agent-secrets --help
 ```
 
 ### Package Managers
@@ -227,8 +227,8 @@ or run it directly:
 Homebrew (macOS / Linux):
 
 ```bash
-brew tap yourusername/agent-keys
-brew install agent-keys
+brew tap yourusername/agent-secrets
+brew install agent-secrets
 ```
 
 > A community Homebrew formula is welcome. Please open an issue if you maintain one.
@@ -239,7 +239,7 @@ For normal usage:
 
 - an SSH key pair, or a passphrase lock;
 - a Git repository or project directory;
-- the `agent-keys` binary.
+- the `agent-secrets` binary.
 
 For building from source:
 
@@ -263,13 +263,13 @@ cd my-app
 Initialize a vault using an explicit SSH public key:
 
 ```bash
-agent-keys init --ssh ~/.ssh/id_ed25519.pub
+agent-secrets init --ssh ~/.ssh/id_ed25519.pub
 ```
 
 Or initialize with a passphrase lock:
 
 ```bash
-agent-keys init --passphrase
+agent-secrets init --passphrase
 ```
 
 Commit the encrypted vault:
@@ -282,37 +282,37 @@ git commit -m "Add encrypted Agent Keys vault"
 Unlock the vault:
 
 ```bash
-agent-keys unlock
+agent-secrets unlock
 ```
 
 Add a secret:
 
 ```bash
-agent-keys kv set DATABASE_URL --value "postgres://user:pass@localhost:5432/app"
+agent-secrets kv set DATABASE_URL --value "postgres://user:pass@localhost:5432/app"
 ```
 
 Read it back:
 
 ```bash
-agent-keys kv get DATABASE_URL
+agent-secrets kv get DATABASE_URL
 ```
 
 Print shell exports:
 
 ```bash
-agent-keys env
+agent-secrets env
 ```
 
 Run an application with all key-value secrets injected as environment variables:
 
 ```bash
-agent-keys run -- npm start
+agent-secrets run -- npm start
 ```
 
 Close the session:
 
 ```bash
-agent-keys close
+agent-secrets close
 ```
 
 ---
@@ -322,7 +322,7 @@ agent-keys close
 ### Initialize A Vault
 
 ```bash
-agent-keys init
+agent-secrets init
 ```
 
 When no `--ssh` option is supplied, Agent Keys looks for common SSH public keys in `~/.ssh/` and asks which ones to use.
@@ -330,25 +330,25 @@ When no `--ssh` option is supplied, Agent Keys looks for common SSH public keys 
 Explicit SSH key:
 
 ```bash
-agent-keys init --ssh ~/.ssh/id_ed25519.pub
+agent-secrets init --ssh ~/.ssh/id_ed25519.pub
 ```
 
 Multiple SSH keys:
 
 ```bash
-agent-keys init --ssh ~/.ssh/id_ed25519.pub --ssh ./deploy_key.pub
+agent-secrets init --ssh ~/.ssh/id_ed25519.pub --ssh ./deploy_key.pub
 ```
 
 Passphrase lock:
 
 ```bash
-agent-keys init --passphrase
+agent-secrets init --passphrase
 ```
 
 Force reinitialize an existing vault:
 
 ```bash
-agent-keys init --ssh ~/.ssh/id_ed25519.pub --force
+agent-secrets init --ssh ~/.ssh/id_ed25519.pub --force
 ```
 
 Be careful with `--force`; it replaces the existing `.agent-keys/` directory.
@@ -356,20 +356,20 @@ Be careful with `--force`; it replaces the existing `.agent-keys/` directory.
 ### Unlock
 
 ```bash
-agent-keys unlock
+agent-secrets unlock
 ```
 
 Read-only unlock:
 
 ```bash
-agent-keys unlock --read
+agent-secrets unlock --read
 ```
 
 Unlock using an SSH private key stored in an environment variable:
 
 ```bash
 export AGENT_KEYS_SSH_KEY="$(cat ~/.ssh/id_ed25519)"
-agent-keys unlock --ssh-key-from-env AGENT_KEYS_SSH_KEY
+agent-secrets unlock --ssh-key-from-env AGENT_KEYS_SSH_KEY
 ```
 
 This is useful in CI and deployment automation.
@@ -377,7 +377,7 @@ This is useful in CI and deployment automation.
 ### Close
 
 ```bash
-agent-keys close
+agent-secrets close
 ```
 
 This deletes the encrypted session file. Future commands will require unlock again.
@@ -385,7 +385,7 @@ This deletes the encrypted session file. Future commands will require unlock aga
 ### Status
 
 ```bash
-agent-keys status
+agent-secrets status
 ```
 
 Shows whether the vault is locked or unlocked, the current session mode, active context, lock count, and stored secret counts where possible.
@@ -395,43 +395,43 @@ Shows whether the vault is locked or unlocked, the current session mode, active 
 Set a secret interactively:
 
 ```bash
-agent-keys kv set API_KEY
+agent-secrets kv set API_KEY
 ```
 
 Set a secret from a flag:
 
 ```bash
-agent-keys kv set API_KEY --value "abc123"
+agent-secrets kv set API_KEY --value "abc123"
 ```
 
 Set a secret from stdin:
 
 ```bash
-printf '%s' "$DATABASE_URL" | agent-keys kv set DATABASE_URL --from-stdin
+printf '%s' "$DATABASE_URL" | agent-secrets kv set DATABASE_URL --from-stdin
 ```
 
 Get a secret:
 
 ```bash
-agent-keys kv get API_KEY
+agent-secrets kv get API_KEY
 ```
 
 Get without a newline:
 
 ```bash
-agent-keys kv get API_KEY --no-newline
+agent-secrets kv get API_KEY --no-newline
 ```
 
 List keys without revealing values:
 
 ```bash
-agent-keys kv list
+agent-secrets kv list
 ```
 
 Remove a key:
 
 ```bash
-agent-keys kv remove API_KEY
+agent-secrets kv remove API_KEY
 ```
 
 ### File Secrets
@@ -439,31 +439,31 @@ agent-keys kv remove API_KEY
 Store a local file in the vault:
 
 ```bash
-agent-keys file write certs/tls.crt ./tls.crt
+agent-secrets file write certs/tls.crt ./tls.crt
 ```
 
 Read a file to stdout:
 
 ```bash
-agent-keys file read certs/tls.crt
+agent-secrets file read certs/tls.crt
 ```
 
 Read a file to disk:
 
 ```bash
-agent-keys file read certs/tls.crt ./tls.crt
+agent-secrets file read certs/tls.crt ./tls.crt
 ```
 
 List stored file paths:
 
 ```bash
-agent-keys file list
+agent-secrets file list
 ```
 
 Remove a file:
 
 ```bash
-agent-keys file remove certs/tls.crt
+agent-secrets file remove certs/tls.crt
 ```
 
 ### Environment Export
@@ -471,37 +471,37 @@ agent-keys file remove certs/tls.crt
 Bash/sh:
 
 ```bash
-agent-keys env --format bash
+agent-secrets env --format bash
 ```
 
 Fish:
 
 ```bash
-agent-keys env --format fish
+agent-secrets env --format fish
 ```
 
 PowerShell:
 
 ```powershell
-agent-keys env --format powershell
+agent-secrets env --format powershell
 ```
 
 JSON:
 
 ```bash
-agent-keys env --format json
+agent-secrets env --format json
 ```
 
 GitHub Actions environment-file format:
 
 ```bash
-agent-keys env --format github
+agent-secrets env --format github
 ```
 
 ### Run A Command
 
 ```bash
-agent-keys run -- node server.js
+agent-secrets run -- node server.js
 ```
 
 Everything in the active context's key-value store is injected into the child process environment.
@@ -509,8 +509,8 @@ Everything in the active context's key-value store is injected into the child pr
 Example:
 
 ```bash
-agent-keys kv set DATABASE_URL --value "postgres://localhost/app"
-agent-keys run -- printenv DATABASE_URL
+agent-secrets kv set DATABASE_URL --value "postgres://localhost/app"
+agent-secrets run -- printenv DATABASE_URL
 ```
 
 ---
@@ -530,38 +530,38 @@ Contexts are not permission boundaries. Anyone who can unlock the vault can read
 List contexts:
 
 ```bash
-agent-keys context list
+agent-secrets context list
 ```
 
 Use a context:
 
 ```bash
-agent-keys context use dev
+agent-secrets context use dev
 ```
 
 Show current context:
 
 ```bash
-agent-keys context current
+agent-secrets context current
 ```
 
 Set a value in a specific context:
 
 ```bash
-agent-keys kv set DATABASE_URL --context dev --value "postgres://dev/db"
-agent-keys kv set DATABASE_URL --context prod --value "postgres://prod/db"
+agent-secrets kv set DATABASE_URL --context dev --value "postgres://dev/db"
+agent-secrets kv set DATABASE_URL --context prod --value "postgres://prod/db"
 ```
 
 Read from a specific context:
 
 ```bash
-agent-keys kv get DATABASE_URL --context prod
+agent-secrets kv get DATABASE_URL --context prod
 ```
 
 Run with a specific context:
 
 ```bash
-agent-keys run --context staging -- npm start
+agent-secrets run --context staging -- npm start
 ```
 
 ---
@@ -577,25 +577,25 @@ Agent Keys can sit outside the container and inject secrets at `docker run` time
 Unlock on the host:
 
 ```bash
-agent-keys unlock --read
+agent-secrets unlock --read
 ```
 
 Run the app container with values from Agent Keys:
 
 ```bash
-agent-keys run -- docker run --rm \
+agent-secrets run -- docker run --rm \
   -p 3000:3000 \
   my-app:latest
 ```
 
-Because `agent-keys run` injects all key-value secrets into the child process environment, `docker run` receives those environment variables and passes them to the container when you include `-e` flags.
+Because `agent-secrets run` injects all key-value secrets into the child process environment, `docker run` receives those environment variables and passes them to the container when you include `-e` flags.
 
 For explicit variables:
 
 ```bash
 docker run --rm \
-  -e DATABASE_URL="$(agent-keys kv get DATABASE_URL --no-newline)" \
-  -e API_KEY="$(agent-keys kv get API_KEY --no-newline)" \
+  -e DATABASE_URL="$(agent-secrets kv get DATABASE_URL --no-newline)" \
+  -e API_KEY="$(agent-secrets kv get API_KEY --no-newline)" \
   my-app:latest
 ```
 
@@ -609,7 +609,7 @@ Generate a temporary `.env` file:
 
 ```bash
 tmp_env="$(mktemp)"
-agent-keys env --format bash \
+agent-secrets env --format bash \
   | sed 's/^export //' \
   | sed "s/'//g" > "$tmp_env"
 
@@ -641,13 +641,13 @@ CMD ["node", "server.js"]
 Run:
 
 ```bash
-agent-keys run --context prod -- docker run --rm \
+agent-secrets run --context prod -- docker run --rm \
   -e DATABASE_URL \
   -e API_KEY \
   my-app:latest
 ```
 
-The `-e NAME` form tells Docker to copy the variable from the host environment into the container. Since `agent-keys run` provides those variables to `docker run`, Docker can forward them.
+The `-e NAME` form tells Docker to copy the variable from the host environment into the container. Since `agent-secrets run` provides those variables to `docker run`, Docker can forward them.
 
 ### Pattern 4: Inject File Secrets With Bind Mounts
 
@@ -655,7 +655,7 @@ If your app expects a credential file:
 
 ```bash
 tmp_dir="$(mktemp -d)"
-agent-keys file read service-account.json "$tmp_dir/service-account.json"
+agent-secrets file read service-account.json "$tmp_dir/service-account.json"
 
 docker run --rm \
   -v "$tmp_dir/service-account.json:/run/secrets/service-account.json:ro" \
@@ -668,9 +668,9 @@ rm -rf "$tmp_dir"
 This writes plaintext to disk temporarily. Prefer tmpfs-backed paths where possible:
 
 ```bash
-tmp_dir="/dev/shm/agent-keys-$$"
+tmp_dir="/dev/shm/agent-secrets-$$"
 mkdir -p "$tmp_dir"
-agent-keys file read service-account.json "$tmp_dir/service-account.json"
+agent-secrets file read service-account.json "$tmp_dir/service-account.json"
 docker run --rm \
   -v "$tmp_dir/service-account.json:/run/secrets/service-account.json:ro" \
   my-app:latest
@@ -679,7 +679,7 @@ rm -rf "$tmp_dir"
 
 ### Pattern 5: Runtime Entrypoint Inside The Container
 
-You can install `agent-keys` inside a container and decrypt at startup, but this is usually less desirable because the container then needs:
+You can install `agent-secrets` inside a container and decrypt at startup, but this is usually less desirable because the container then needs:
 
 - `.agent-keys/`;
 - a private SSH key or passphrase;
@@ -692,8 +692,8 @@ docker run --rm \
   -v "$PWD/.agent-keys:/app/.agent-keys:ro" \
   -v "$HOME/.ssh/id_ed25519:/run/keys/agent_keys:ro" \
   -e AGENT_KEYS_SSH_KEY="$(cat ~/.ssh/id_ed25519)" \
-  my-app-with-agent-keys:latest \
-  sh -lc 'agent-keys unlock --ssh-key-from-env AGENT_KEYS_SSH_KEY && agent-keys run -- ./server'
+  my-app-with-agent-secrets:latest \
+  sh -lc 'agent-secrets unlock --ssh-key-from-env AGENT_KEYS_SSH_KEY && agent-secrets run -- ./server'
 ```
 
 For most teams, host-side unlock and runtime injection is cleaner.
@@ -702,7 +702,7 @@ For most teams, host-side unlock and runtime injection is cleaner.
 
 ## Docker Compose Usage
 
-Docker Compose supports environment variables from the shell, `.env` files, and `env_file`. Agent Keys works best when Compose reads variables from the shell environment created by `agent-keys run`.
+Docker Compose supports environment variables from the shell, `.env` files, and `env_file`. Agent Keys works best when Compose reads variables from the shell environment created by `agent-secrets run`.
 
 ### Compose File
 
@@ -720,7 +720,7 @@ services:
 Run:
 
 ```bash
-agent-keys run --context dev -- docker compose up
+agent-secrets run --context dev -- docker compose up
 ```
 
 Compose expands `${DATABASE_URL}` and `${API_KEY}` from its process environment.
@@ -730,17 +730,17 @@ Compose expands `${DATABASE_URL}` and `${API_KEY}` from its process environment.
 If your shell supports process substitution:
 
 ```bash
-eval "$(agent-keys env --format bash)"
+eval "$(agent-secrets env --format bash)"
 docker compose up
 ```
 
-This places secrets into your current shell environment until you unset them or close the shell. Prefer `agent-keys run` when possible because the secrets are scoped to the child process.
+This places secrets into your current shell environment until you unset them or close the shell. Prefer `agent-secrets run` when possible because the secrets are scoped to the child process.
 
 ### Compose With Temporary Env File
 
 ```bash
 tmp_env="$(mktemp)"
-agent-keys env --format json \
+agent-secrets env --format json \
   | jq -r 'to_entries[] | "\(.key)=\(.value)"' > "$tmp_env"
 
 docker compose --env-file "$tmp_env" up
@@ -754,11 +754,11 @@ This is convenient for existing Compose workflows but carries the plaintext-on-d
 Use Agent Keys contexts to match Compose profiles:
 
 ```bash
-agent-keys kv set DATABASE_URL --context dev --value "postgres://dev"
-agent-keys kv set DATABASE_URL --context staging --value "postgres://staging"
+agent-secrets kv set DATABASE_URL --context dev --value "postgres://dev"
+agent-secrets kv set DATABASE_URL --context staging --value "postgres://staging"
 
-agent-keys run --context dev -- docker compose --profile dev up
-agent-keys run --context staging -- docker compose --profile staging up
+agent-secrets run --context dev -- docker compose --profile dev up
+agent-secrets run --context staging -- docker compose --profile staging up
 ```
 
 ---
@@ -785,15 +785,15 @@ Unlock:
 
 ```bash
 export AGENT_KEYS_SSH_KEY="$DEPLOY_PRIVATE_KEY"
-agent-keys unlock --read --ssh-key-from-env AGENT_KEYS_SSH_KEY
+agent-secrets unlock --read --ssh-key-from-env AGENT_KEYS_SSH_KEY
 ```
 
 Create or update a Secret:
 
 ```bash
 kubectl create secret generic my-app-secrets \
-  --from-literal=DATABASE_URL="$(agent-keys kv get DATABASE_URL --context prod --no-newline)" \
-  --from-literal=API_KEY="$(agent-keys kv get API_KEY --context prod --no-newline)" \
+  --from-literal=DATABASE_URL="$(agent-secrets kv get DATABASE_URL --context prod --no-newline)" \
+  --from-literal=API_KEY="$(agent-secrets kv get API_KEY --context prod --no-newline)" \
   --dry-run=client -o yaml \
   | kubectl apply -f -
 ```
@@ -806,7 +806,7 @@ You can convert JSON output into `kubectl` flags:
 
 ```bash
 args="$(
-  agent-keys env --context prod --format json \
+  agent-secrets env --context prod --format json \
     | jq -r 'to_entries[] | "--from-literal=\(.key)=\(.value|@sh)"'
 )"
 
@@ -821,16 +821,16 @@ Be careful with shell quoting. For critical production workflows, prefer a small
 Store a certificate:
 
 ```bash
-agent-keys file write certs/tls.crt ./tls.crt --context prod
-agent-keys file write certs/tls.key ./tls.key --context prod
+agent-secrets file write certs/tls.crt ./tls.crt --context prod
+agent-secrets file write certs/tls.key ./tls.key --context prod
 ```
 
 Deploy it:
 
 ```bash
 tmp_dir="$(mktemp -d)"
-agent-keys file read certs/tls.crt "$tmp_dir/tls.crt" --context prod
-agent-keys file read certs/tls.key "$tmp_dir/tls.key" --context prod
+agent-secrets file read certs/tls.crt "$tmp_dir/tls.crt" --context prod
+agent-secrets file read certs/tls.key "$tmp_dir/tls.key" --context prod
 
 kubectl create secret tls my-app-tls \
   --cert="$tmp_dir/tls.crt" \
@@ -844,7 +844,7 @@ rm -rf "$tmp_dir"
 Prefer memory-backed temporary directories if available:
 
 ```bash
-tmp_dir="/dev/shm/agent-keys-k8s-$$"
+tmp_dir="/dev/shm/agent-secrets-k8s-$$"
 mkdir -p "$tmp_dir"
 ```
 
@@ -882,15 +882,15 @@ The secret object is generated at deploy time from Agent Keys. The Deployment it
 Example:
 
 ```bash
-agent-keys kv set DATABASE_URL --context dev --value "postgres://dev"
-agent-keys kv set DATABASE_URL --context prod --value "postgres://prod"
+agent-secrets kv set DATABASE_URL --context dev --value "postgres://dev"
+agent-secrets kv set DATABASE_URL --context prod --value "postgres://prod"
 ```
 
 Deploy dev:
 
 ```bash
 kubectl -n dev create secret generic my-app-secrets \
-  --from-literal=DATABASE_URL="$(agent-keys kv get DATABASE_URL --context dev --no-newline)" \
+  --from-literal=DATABASE_URL="$(agent-secrets kv get DATABASE_URL --context dev --no-newline)" \
   --dry-run=client -o yaml \
   | kubectl apply -f -
 ```
@@ -899,7 +899,7 @@ Deploy prod:
 
 ```bash
 kubectl -n prod create secret generic my-app-secrets \
-  --from-literal=DATABASE_URL="$(agent-keys kv get DATABASE_URL --context prod --no-newline)" \
+  --from-literal=DATABASE_URL="$(agent-secrets kv get DATABASE_URL --context prod --no-newline)" \
   --dry-run=client -o yaml \
   | kubectl apply -f -
 ```
@@ -939,18 +939,18 @@ jobs:
 
       - name: Install Agent Keys
         run: |
-          cargo build --release --manifest-path agent-keys/Cargo.toml
-          sudo install -m 0755 agent-keys/target/release/agent-keys /usr/local/bin/agent-keys
+          cargo build --release --manifest-path agent-secrets/Cargo.toml
+          sudo install -m 0755 agent-secrets/target/release/agent-secrets /usr/local/bin/agent-secrets
 
       - name: Unlock vault
         env:
           AGENT_KEYS_SSH_KEY: ${{ secrets.AGENT_KEYS_SSH_KEY }}
         run: |
-          agent-keys unlock --read --ssh-key-from-env AGENT_KEYS_SSH_KEY
+          agent-secrets unlock --read --ssh-key-from-env AGENT_KEYS_SSH_KEY
 
       - name: Export app env
         run: |
-          agent-keys env --context prod --format github >> "$GITHUB_ENV"
+          agent-secrets env --context prod --format github >> "$GITHUB_ENV"
 
       - name: Deploy
         run: |
@@ -964,9 +964,9 @@ For Kubernetes:
         env:
           AGENT_KEYS_SSH_KEY: ${{ secrets.AGENT_KEYS_SSH_KEY }}
         run: |
-          agent-keys unlock --read --ssh-key-from-env AGENT_KEYS_SSH_KEY
+          agent-secrets unlock --read --ssh-key-from-env AGENT_KEYS_SSH_KEY
           kubectl create secret generic my-app-secrets \
-            --from-literal=DATABASE_URL="$(agent-keys kv get DATABASE_URL --context prod --no-newline)" \
+            --from-literal=DATABASE_URL="$(agent-secrets kv get DATABASE_URL --context prod --no-newline)" \
             --dry-run=client -o yaml \
             | kubectl apply -f -
 ```
@@ -988,7 +988,7 @@ For Kubernetes:
 Ask for their SSH public key:
 
 ```bash
-agent-keys lock add-ssh ./alice.pub
+agent-secrets lock add-ssh ./alice.pub
 git add .agent-keys/
 git commit -m "Add Alice Agent Keys lock"
 git push
@@ -999,8 +999,8 @@ The teammate can pull and unlock with their matching private key.
 ### Add A Backup Passphrase
 
 ```bash
-agent-keys unlock
-agent-keys lock add-passphrase
+agent-secrets unlock
+agent-secrets lock add-passphrase
 git add .agent-keys/
 git commit -m "Add backup passphrase lock"
 ```
@@ -1010,9 +1010,9 @@ Store the passphrase in a secure password manager.
 ### Remove A Teammate
 
 ```bash
-agent-keys unlock
-agent-keys lock list
-agent-keys lock remove ssh-deadbeef
+agent-secrets unlock
+agent-secrets lock list
+agent-secrets lock remove ssh-deadbeef
 git add .agent-keys/
 git commit -m "Remove old Agent Keys lock"
 ```
@@ -1020,7 +1020,7 @@ git commit -m "Remove old Agent Keys lock"
 If you believe the removed key had been compromised, rotate the master key:
 
 ```bash
-agent-keys rotate
+agent-secrets rotate
 git add .agent-keys/
 git commit -m "Rotate Agent Keys master key"
 ```
@@ -1041,7 +1041,7 @@ Secret values are encrypted, so pull requests cannot show plaintext diffs. Revie
 ### Prefer Read-Only Sessions For Deployment
 
 ```bash
-agent-keys unlock --read
+agent-secrets unlock --read
 ```
 
 Read-only mode reduces accidental writes from deployment scripts.
@@ -1084,7 +1084,7 @@ Rotate when:
 Run the command from the repository root, or initialize first:
 
 ```bash
-agent-keys init --ssh ~/.ssh/id_ed25519.pub
+agent-secrets init --ssh ~/.ssh/id_ed25519.pub
 ```
 
 ### `vault is locked`
@@ -1092,13 +1092,13 @@ agent-keys init --ssh ~/.ssh/id_ed25519.pub
 Unlock:
 
 ```bash
-agent-keys unlock
+agent-secrets unlock
 ```
 
 or in CI:
 
 ```bash
-agent-keys unlock --read --ssh-key-from-env AGENT_KEYS_SSH_KEY
+agent-secrets unlock --read --ssh-key-from-env AGENT_KEYS_SSH_KEY
 ```
 
 ### `no SSH private keys found in ~/.ssh/`
@@ -1107,7 +1107,7 @@ Use a passphrase lock, place your private key in the default SSH location, or us
 
 ```bash
 export AGENT_KEYS_SSH_KEY="$(cat ~/.ssh/id_ed25519)"
-agent-keys unlock --ssh-key-from-env AGENT_KEYS_SSH_KEY
+agent-secrets unlock --ssh-key-from-env AGENT_KEYS_SSH_KEY
 ```
 
 ### `wrong passphrase`
@@ -1119,10 +1119,10 @@ Check that you selected the correct passphrase lock and typed the right passphra
 Make sure Docker forwards the variables:
 
 ```bash
-agent-keys run -- docker run --rm -e DATABASE_URL -e API_KEY my-app
+agent-secrets run -- docker run --rm -e DATABASE_URL -e API_KEY my-app
 ```
 
-`agent-keys run` sets variables for the `docker` process. Docker only forwards variables that you pass with `-e` or define in Compose.
+`agent-secrets run` sets variables for the `docker` process. Docker only forwards variables that you pass with `-e` or define in Compose.
 
 ### Kubernetes Secret Was Applied But App Still Fails
 
@@ -1141,7 +1141,7 @@ Check:
 Build:
 
 ```bash
-cd agent-keys
+cd agent-secrets
 cargo build
 ```
 

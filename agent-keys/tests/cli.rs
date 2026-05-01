@@ -8,7 +8,7 @@ use std::time::{SystemTime, UNIX_EPOCH};
 static SCRIPT_LOCK: Mutex<()> = Mutex::new(());
 
 fn binary() -> &'static str {
-    env!("CARGO_BIN_EXE_agent-keys")
+    env!("CARGO_BIN_EXE_agent-secrets")
 }
 
 fn temp_dir(name: &str) -> std::io::Result<PathBuf> {
@@ -16,7 +16,7 @@ fn temp_dir(name: &str) -> std::io::Result<PathBuf> {
         .duration_since(UNIX_EPOCH)
         .unwrap()
         .as_nanos();
-    let path = std::env::temp_dir().join(format!("agent-keys-{name}-{id}"));
+    let path = std::env::temp_dir().join(format!("agent-secrets-{name}-{id}"));
     fs::create_dir_all(&path)?;
     Ok(path)
 }

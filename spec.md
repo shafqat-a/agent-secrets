@@ -158,16 +158,16 @@ If no context is specified, the `default` context is used.
 
 ### Context Commands
 ```bash
-agent-keys context list              # Show all contexts in the vault
-agent-keys context use prod          # Set active context for this session
-agent-keys context current           # Print the active context name
+agent-secrets context list              # Show all contexts in the vault
+agent-secrets context use prod          # Set active context for this session
+agent-secrets context current           # Print the active context name
 ```
 
 ### Scoped Commands
 ```bash
-agent-keys kv get DATABASE_URL              # Uses active context
-agent-keys kv get DATABASE_URL --context dev  # Override for one command
-agent-keys file read certs/tls.crt --context prod
+agent-secrets kv get DATABASE_URL              # Uses active context
+agent-secrets kv get DATABASE_URL --context dev  # Override for one command
+agent-secrets file read certs/tls.crt --context prod
 ```
 
 ---
@@ -176,9 +176,9 @@ agent-keys file read certs/tls.crt --context prod
 
 ### Session File
 When the vault is unlocked, an encrypted session file is written to the platform cache directory:
-- **macOS:** `~/Library/Caches/agent-keys/session`
-- **Linux:** `~/.cache/agent-keys/session`
-- **Windows:** `%LOCALAPPDATA%\agent-keys\session`
+- **macOS:** `~/Library/Caches/agent-secrets/session`
+- **Linux:** `~/.cache/agent-secrets/session`
+- **Windows:** `%LOCALAPPDATA%\agent-secrets\session`
 
 The session file contains the **master key encrypted with a machine-derived key**.
 
@@ -200,7 +200,7 @@ session_key = HKDF-SHA256(
 - Survives reboots (file stays on disk).
 - Unreadable on a different machine or user account.
 - If hardware/OS changes enough to break the machine ID, the session file fails to decrypt and the user is prompted to authenticate normally.
-- **Explicitly deleted** when `agent-keys close` is run.
+- **Explicitly deleted** when `agent-secrets close` is run.
 
 ### Session Modes
 The session file includes a mode flag:
@@ -215,7 +215,7 @@ This is a **safety switch**, not a cryptographic boundary. The same lock (SSH or
 
 ### Core Commands
 
-#### `agent-keys init`
+#### `agent-secrets init`
 Initialize a new vault in the current repository.
 - Detects SSH public keys in `~/.ssh/` (id_ed25519.pub, id_rsa.pub)
 - Prompts user to select which key(s) to use
@@ -231,20 +231,20 @@ Initialize a new vault in the current repository.
 --force             Overwrite existing vault
 ```
 
-#### `agent-keys unlock [--read]`
+#### `agent-secrets unlock [--read]`
 Unlock the vault and create the session file.
 - Prompts for authentication method if multiple locks exist
 - `--read` opens the vault in read-only safety mode
 - Session survives until `close` is called
 
-#### `agent-keys close`
+#### `agent-secrets close`
 Delete the session file and lock the vault.
 - Subsequent commands will require authentication again
 
-#### `agent-keys status`
+#### `agent-secrets status`
 Show vault status: locked/unlocked, mode (read/write), active context, number of secrets, number of locks.
 
-#### `agent-keys kv get <KEY>`
+#### `agent-secrets kv get <KEY>`
 Retrieve and print a single secret value.
 - Uses active context unless `--context` is provided
 - Prints raw value to stdout
@@ -255,7 +255,7 @@ Retrieve and print a single secret value.
 --no-newline        Print without trailing newline
 ```
 
-#### `agent-keys kv set <KEY>`
+#### `agent-secrets kv set <KEY>`
 Add or update a secret.
 - Prompts for value (hidden input)
 - Encrypts into vault and atomically rewrites `vault.vlt`
@@ -267,28 +267,28 @@ Add or update a secret.
 --context <name>    Write to a specific context (creates if missing)
 ```
 
-#### `agent-keys kv remove <KEY>`
+#### `agent-secrets kv remove <KEY>`
 Remove a secret from the active context.
 
-#### `agent-keys kv list`
+#### `agent-secrets kv list`
 List all keys in the active context without revealing values.
 
-#### `agent-keys file write <VAULT-PATH> <LOCAL-PATH>`
+#### `agent-secrets file write <VAULT-PATH> <LOCAL-PATH>`
 Write a local file into the vault.
-- Example: `agent-keys file write prod/certs/tls.crt ./tls.crt`
+- Example: `agent-secrets file write prod/certs/tls.crt ./tls.crt`
 
-#### `agent-keys file read <VAULT-PATH> [LOCAL-PATH]`
+#### `agent-secrets file read <VAULT-PATH> [LOCAL-PATH]`
 Read a file from the vault.
 - If `LOCAL-PATH` is omitted, prints raw bytes to stdout
 - If `LOCAL-PATH` is provided, writes the file to disk
 
-#### `agent-keys file remove <VAULT-PATH>`
+#### `agent-secrets file remove <VAULT-PATH>`
 Remove a file from the vault.
 
-#### `agent-keys file list`
+#### `agent-secrets file list`
 List all file paths stored in the active context.
 
-#### `agent-keys run -- <COMMAND...>`
+#### `agent-secrets run -- <COMMAND...>`
 Run a command with secrets injected as environment variables.
 - Unlocks vault (or uses session)
 - Sets all KV secrets from the active context as env vars (keys are prefixed if configured)
@@ -297,16 +297,16 @@ Run a command with secrets injected as environment variables.
 
 **Example:**
 ```bash
-agent-keys run -- python app.py
-agent-keys run --context prod -- npm start
+agent-secrets run -- python app.py
+agent-secrets run --context prod -- npm start
 ```
 
-#### `agent-keys env`
+#### `agent-secrets env`
 Print secrets as shell export statements.
 
 **Example:**
 ```bash
-eval $(agent-keys env)
+eval $(agent-secrets env)
 ```
 
 **Options:**
@@ -317,37 +317,37 @@ eval $(agent-keys env)
 
 ### Context Commands
 
-#### `agent-keys context list`
+#### `agent-secrets context list`
 List all contexts in the vault.
 
-#### `agent-keys context use <NAME>`
+#### `agent-secrets context use <NAME>`
 Set the active context for the current session. The context name is stored in a local preference file (not the vault), so different terminals can use different contexts simultaneously.
 
-#### `agent-keys context current`
+#### `agent-secrets context current`
 Print the currently active context name.
 
 ### Lock Management
 
-#### `agent-keys lock add-ssh <PUBKEY>`
+#### `agent-secrets lock add-ssh <PUBKEY>`
 Add a new SSH public key as an unlock method.
 
-#### `agent-keys lock add-passphrase`
+#### `agent-secrets lock add-passphrase`
 Add a passphrase lock.
 - Prompts for a strong passphrase
 - Generates Argon2id parameters and salt
 - Creates new lock file
 
-#### `agent-keys lock list`
+#### `agent-secrets lock list`
 List all registered unlock methods.
 
-#### `agent-keys lock remove <ID>`
+#### `agent-secrets lock remove <ID>`
 Remove an unlock method by its ID.
 - Requires vault to be unlocked
 - **Prevents removal of the last lock** (to avoid lockout)
 
 ### Utility Commands
 
-#### `agent-keys rotate`
+#### `agent-secrets rotate`
 Generate a new master key and re-encrypt the vault.
 - Re-encrypts all lock files with the new master key
 - Useful if a lock file may have been compromised
@@ -374,9 +374,9 @@ Generate a new master key and re-encrypt the vault.
 #### Configuration & Cache Directories
 | Platform | Config | Cache (session file) |
 |----------|--------|---------------------|
-| macOS | `~/Library/Application Support/agent-keys/` | `~/Library/Caches/agent-keys/` |
-| Linux | `~/.config/agent-keys/` | `~/.cache/agent-keys/` |
-| Windows | `%APPDATA%\agent-keys\` | `%LOCALAPPDATA%\agent-keys\` |
+| macOS | `~/Library/Application Support/agent-secrets/` | `~/Library/Caches/agent-secrets/` |
+| Linux | `~/.config/agent-secrets/` | `~/.cache/agent-secrets/` |
+| Windows | `%APPDATA%\agent-secrets\` | `%LOCALAPPDATA%\agent-secrets\` |
 
 #### Session Machine ID Sources
 | Platform | Source |
@@ -413,13 +413,13 @@ For GitHub Actions and other CI environments:
   env:
     AGENT_KEYS_SSH_KEY: ${{ secrets.DEPLOY_KEY }}
   run: |
-    agent-keys unlock --ssh-key-from-env AGENT_KEYS_SSH_KEY
-    agent-keys env --format github >> "$GITHUB_ENV"
+    agent-secrets unlock --ssh-key-from-env AGENT_KEYS_SSH_KEY
+    agent-secrets env --format github >> "$GITHUB_ENV"
 ```
 
 Or pipe directly:
 ```bash
-agent-keys env --format bash >> .env
+agent-secrets env --format bash >> .env
 ```
 
 ---

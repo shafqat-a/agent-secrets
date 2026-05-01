@@ -10,7 +10,7 @@ pub fn derive_machine_key(salt: &[u8]) -> Result<[u8; 32]> {
     let ikm = format!("{}:{}:{}", machine_id, username, home_dir);
     let hkdf = Hkdf::<Sha256>::new(Some(salt), ikm.as_bytes());
     let mut okm = [0u8; 32];
-    hkdf.expand(b"agent-keys-session", &mut okm)
+    hkdf.expand(b"agent-secrets-session", &mut okm)
         .map_err(|e| anyhow::anyhow!("hkdf expand failed: {:?}", e))?;
     Ok(okm)
 }

@@ -7,7 +7,7 @@ use rand::RngCore;
 pub fn run() -> Result<()> {
     let session = match Session::load()? {
         Some(s) => s,
-        None => anyhow::bail!("vault is locked. Run `agent-keys unlock` first."),
+        None => anyhow::bail!("vault is locked. Run `agent-secrets unlock` first."),
     };
     session.require_write()?;
 

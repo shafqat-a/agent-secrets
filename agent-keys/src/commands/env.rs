@@ -4,7 +4,7 @@ use anyhow::Result;
 pub fn run(context: Option<String>, format: String) -> Result<()> {
     let session = match Session::load()? {
         Some(s) => s,
-        None => anyhow::bail!("vault is locked. Run `agent-keys unlock` first."),
+        None => anyhow::bail!("vault is locked. Run `agent-secrets unlock` first."),
     };
     let agent_keys_dir = super::find_agent_keys_dir()?;
     let config = super::load_config(&agent_keys_dir)?;

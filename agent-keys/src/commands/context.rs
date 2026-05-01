@@ -12,7 +12,7 @@ pub fn run(cmd: ContextCommands) -> Result<()> {
 fn list() -> Result<()> {
     let session = match crate::session::Session::load()? {
         Some(s) => s,
-        None => anyhow::bail!("vault is locked. Run `agent-keys unlock` first."),
+        None => anyhow::bail!("vault is locked. Run `agent-secrets unlock` first."),
     };
     let agent_keys_dir = super::find_agent_keys_dir()?;
     let config = super::load_config(&agent_keys_dir)?;

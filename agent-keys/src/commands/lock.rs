@@ -127,7 +127,7 @@ fn remove_lock(id: String) -> Result<()> {
 fn require_unlocked_session() -> Result<Session> {
     match Session::load()? {
         Some(s) => Ok(s),
-        None => anyhow::bail!("vault is locked. Run `agent-keys unlock` first."),
+        None => anyhow::bail!("vault is locked. Run `agent-secrets unlock` first."),
     }
 }
 

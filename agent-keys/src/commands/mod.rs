@@ -25,7 +25,7 @@ pub fn find_agent_keys_dir() -> Result<PathBuf> {
         return Ok(candidate);
     }
     anyhow::bail!(
-        "no .agent-keys directory found in current directory. Run `agent-keys init` first."
+        "no .agent-keys directory found in current directory. Run `agent-secrets init` first."
     );
 }
 
@@ -71,7 +71,7 @@ pub fn save_vault(
 }
 
 pub fn get_active_context() -> Result<String> {
-    let dirs = directories::ProjectDirs::from("", "", "agent-keys")
+    let dirs = directories::ProjectDirs::from("", "", "agent-secrets")
         .context("could not determine config directory")?;
     let pref_path = dirs.config_local_dir().join("active_context");
     if pref_path.exists() {
@@ -83,7 +83,7 @@ pub fn get_active_context() -> Result<String> {
 }
 
 pub fn set_active_context(name: &str) -> Result<()> {
-    let dirs = directories::ProjectDirs::from("", "", "agent-keys")
+    let dirs = directories::ProjectDirs::from("", "", "agent-secrets")
         .context("could not determine config directory")?;
     let pref_path = dirs.config_local_dir().join("active_context");
     if let Some(parent) = pref_path.parent() {
